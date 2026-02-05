@@ -1,25 +1,33 @@
 import { Router } from "express";
-import { safeParse, string, z } from "zod";
+import { email, safeParse, string, z } from "zod";
 import jwt from "jsonwebtoken";
 import { middleware } from "../middlewares/middleware";
 import { JWT_SECRET } from "@repo/backend-common/config";
-import { UserSchema } from "@repo/common";
+import { CreateRoomSchema, SigninSchema, CreateUserSchema } from "@repo/common/types"; 
+import { prismaClient } from "@repo/db/client";
 
 
 const router = Router();
 
 router.post("/signUp", async (req, res) => {
-    const { username, password, email } = req.body();
-    UserSchema
-    const check = z.object({
-        username: string(),
-        password: string(),
-        email: email
+    
+    const valid=CreateUserSchema.safeParse(req.body);
+    if(!valid){
+        res.status(404).json({
+            msg:"invalid credential"
+        })
+    }
+
+    const existingser= await prismaClient.User.findOne({
+        where:{valid.email}
+    })
+    prismaClient.User.create({
+        data:{
+            email:valid.email
+        }
     })
 
-    check.safeParse(req.body);
-    //db call
-
+    return;
 
 
 
@@ -28,7 +36,14 @@ router.post("/signUp", async (req, res) => {
 })
 
 router.post("/signIn", async (req, res) => {
-    const { username, password, email } = req.body();
+    const valid=SigninSchema.safeParse(req.body);
+    if(!valid){
+        res.status(404).json({
+            msg:"invalid credential"
+        })
+    }
+
+    return;
 
     const userId = 1;
 
@@ -43,7 +58,14 @@ router.post("/signIn", async (req, res) => {
 
 
 router.post("/room", middleware, async (req, res) => {
-    const { username, password, email } = req.body();
+   const valid=CreateRoomSchema.safeParse(req.body);
+    if(!valid){
+        res.status(404).json({
+            msg:"invalid credential"
+        })
+    }
+
+    return;
 
 
 })
