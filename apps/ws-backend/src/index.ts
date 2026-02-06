@@ -1,31 +1,32 @@
+import "dotenv/config";
 import { WebSocketServer } from "ws";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import {JWT_SECRET} from "@repo/backend-common/config"
+import { JWT_SECRET } from "@repo/backend-common/config"
 
 
-const wss= new WebSocketServer({port:8081});
+const wss = new WebSocketServer({ port: 8082 });
 console.log("websocket started");
 
-wss.on('connection',function connection(ws,Request){
+wss.on('connection', function connection(ws, Request) {
 
-    const url=Request.url;
+    const url = Request.url;
 
-    if(!url){
+    if (!url) {
         return;
     }
 
-    const queryParams=new URLSearchParams(url.split('?')[1]);
+    const queryParams = new URLSearchParams(url.split('?')[1]);
 
-    const token = queryParams.get('token')||"";
+    const token = queryParams.get('token') || "";
 
-    const decoded = jwt.verify(token,JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
 
-    if(!decoded || (decoded as JwtPayload).userId){
+    if (!decoded || (decoded as JwtPayload).userId) {
         ws.close();
         return;
     }
 
-    ws.on('message',function message(data){
+    ws.on('message', function message(data) {
         ws.send('pong');
     })
 })
