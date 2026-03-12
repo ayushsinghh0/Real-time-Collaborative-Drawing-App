@@ -1,0 +1,20 @@
+{
+  "name": "@repo/db",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/node": "latest",
+    "prisma": "^7.3.0"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "peerDependencies": {
+    "typescript": "^5",
+    "@repo/typescript-config": "workspace:*"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.3.0",
+    "@prisma/client": "^7.3.0"
+  }
+}
