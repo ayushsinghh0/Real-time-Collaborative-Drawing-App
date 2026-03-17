@@ -1,25 +1,41 @@
 import express from "express";
 import prisma from "@repo/db";
- import  bcrypt from 'bcrypt';
-
- import jwt from "jsonwebtoken"
+import  bcrypt from 'bcrypt';
+import jwt from "jsonwebtoken";
 import { isAuth } from "./middleware";
-import { JWT_SECRET } from "./config";
+import { JWT_SECRET } from "@repo/backend-common"
+import {signupSchema ,signinSchema} from "@repo/common"
 const app=express()
 app.use(express.json())
 
 app.post("/signUp",async (req,res)=>{
 
-   const username=req.body.username;
-   
-   const password=req.body.password;
-    const hashedpassword=await bcrypt.hash(password,10);
-  await  prisma.user.create({
+   const validSchema=signupSchema.safeParse(req.body);
+
+   if(!validSchema.success){
+    return res.json({
+        msg:"invalid Input"
+    })
+   }
+
+   const {username,password,email,photo}=validSchema.data;
+   const hashedPassword = await bcrypt.hash(password, 10);
+
+   const input =await prisma.user.create({
     data:{
         username,
-        password:hashedpassword
+        password : hashedPassword,
+        email,
+        photo
     }
    })
+   if(!input){
+    return res.json({
+        msg: "something wrong please try again later"
+    })
+   }
+
+
 
    res.json({
     msg:"user created"
@@ -28,15 +44,23 @@ app.post("/signUp",async (req,res)=>{
 
 app.post("/signin",async (req,res)=>{
 
-   const username=req.body.username;
-   
-   const password=req.body.password;
+    const check=signinSchema.safeParse(req.body);
+
+    if (!check.success) {
+  return res.json({ msg: "invalid input" });
+}
+
+   const {username,password}=check.data;
+  
     
    const User=await prisma.user.findUnique({
     where:{
         username
     }
    })
+   if (!User) {
+    return res.json({ msg: "user not found" });
+  }
 
    const userPassword=User?.password;
    if(!userPassword){
@@ -45,7 +69,7 @@ app.post("/signin",async (req,res)=>{
     })
    }
 
-   const checkPassword=bcrypt.compare(password,User?.password);
+   const checkPassword=await bcrypt.compare(password,User?.password);
 
    if(!checkPassword){
     return res.json({
@@ -53,13 +77,7 @@ app.post("/signin",async (req,res)=>{
     })
    }
 
-   if(!User||User.id){
-    return res.json({
-        msg:"user not found"
-    })
-   }
-
-   const token=await jwt.sign({id:User.id},JWT_SECRET)
+   const token=jwt.sign({id:User.id},JWT_SECRET)
 
    res.json({
     token
@@ -77,4 +95,6 @@ app.post("/room",isAuth,(req,res)=>{
     })
 })
 
-app.listen(3000);
+app.listen(3001, () => {
+  console.log("Server running");
+});
