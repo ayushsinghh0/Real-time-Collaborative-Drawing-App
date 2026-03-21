@@ -4,7 +4,7 @@ import  bcrypt from 'bcrypt';
 import jwt from "jsonwebtoken";
 import { isAuth } from "./middleware";
 import { JWT_SECRET } from "@repo/backend-common"
-import {signupSchema ,signinSchema} from "@repo/common"
+import {signupSchema ,signinSchema,roomSchema} from "@repo/common"
 const app=express()
 app.use(express.json())
 
@@ -87,11 +87,30 @@ app.post("/signin",async (req,res)=>{
 })
 
 
-app.post("/room",isAuth,(req,res)=>{
+app.post("/room",isAuth,async (req,res)=>{
     //db call
 
-    res.json({
-        roomId:123
+    const parsedData= roomSchema.safeParse(req.body);
+
+    if(!parsedData.success){
+        return res.json({
+            msg:"Incorrect input"
+        })
+    }
+
+    
+    //@ts-ignore
+    const userId=req.userId;
+
+    await prisma.room.create({
+        data:{
+            slug:parsedData.data.name,
+            adminId:userId
+        }
+    })
+
+   return  res.json({
+        roomId:123  
     })
 })
 
